@@ -1,0 +1,12 @@
+--- Check started at Mon Apr 27 11:48:32 2026 ---
+[SUCCESS] https://www.google.com | Status: 200 | Latency: 186.01ms
+[SUCCESS] https://www.github.com | Status: 200 | Latency: 258.02ms
+[ERROR] https://www.amazon.com | Failed: HTTP Error 503: Service Unavailable
+[ERROR] https://www.microsoft.com | Failed: The read operation timed out
+[ERROR] https://www.fake-site-for-testing.com | Failed: <urlopen error [Errno 8] nodename nor servname provided, or not known>
+--- Check started at Mon Apr 27 11:54:13 2026 ---
+[SUCCESS] https://www.google.com | Status: 200 | Latency: 190.61ms
+[SUCCESS] https://www.github.com | Status: 200 | Latency: 252.97ms
+[ERROR] https://www.amazon.com | Failed: HTTP Error 503: Service Unavailable
+[SUCCESS] https://www.microsoft.com | Status: 200 | Latency: 137.75ms
+[ERROR] https://www.fake-site-for-testing.com | Failed: <urlopen error [Errno 8] nodename nor servname provided, or not known>

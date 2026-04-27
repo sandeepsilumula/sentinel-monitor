@@ -1,38 +1,46 @@
 import urllib.request
 import time
 import os
+import boto3  # <--- NEW: Import the AWS SDK
 
-# Define the file containing our target websites
+# CONFIGURATION
 SITES_FILE = "sites.txt"
+LOG_FILE = "monitor.log"
+# REPLACE THIS with the 'bucket_name' from your Terraform output
+S3_BUCKET_NAME = "sentinel-monitor-logs-d91fb0fe" 
 
 def check_sites():
-    # Phase 1 Logic: Read URLs from the text file
-    if not os.path.exists(SITES_FILE):
-        print(f"[ERROR] {SITES_FILE} not found!")
-        return
-
+    s3_client = boto3.client('s3') # <--- Initialize S3 connection
+    
     with open(SITES_FILE, "r") as f:
         sites = f.read().splitlines()
 
-    print(f"--- Sentinel Monitor Started at {time.ctime()} ---")
+    # Open the log file in 'append' mode to keep history
+    with open(LOG_FILE, "a") as log:
+        log.write(f"--- Check started at {time.ctime()} ---\n")
+        
+        for site in sites:
+            try:
+                start_time = time.time()
+                response = urllib.request.urlopen(site, timeout=10)
+                latency = (time.time() - start_time) * 1000
+                
+                result = f"[SUCCESS] {site} | Status: {response.status} | Latency: {latency:.2f}ms\n"
+                print(result.strip())
+                log.write(result)
+                
+            except Exception as e:
+                error_msg = f"[ERROR] {site} | Failed: {e}\n"
+                print(error_msg.strip())
+                log.write(error_msg)
 
-    for site in sites:
-        try:
-            # Measure Latency (The time it takes to get a response)
-            start_time = time.time()
-            
-            # Perform the HTTP check
-            response = urllib.request.urlopen(site, timeout=10)
-            
-            # Calculate latency in milliseconds
-            latency = (time.time() - start_time) * 1000
-            
-            # Output success to terminal (Standard SRE Status Code check)
-            print(f"[SUCCESS] {site} | Status: {response.status} | Latency: {latency:.2f}ms")
-            
-        except Exception as e:
-            # Fault Tolerance: Catch errors (DNS, SSL, or 404s) without crashing the script
-            print(f"[ERROR] {site} | Failed: {e}")
+    # PHASE 4 ACTION: Upload the log file to the Cloud
+    try:
+        print(f"Uploading {LOG_FILE} to S3...")
+        s3_client.upload_file(LOG_FILE, S3_BUCKET_NAME, LOG_FILE)
+        print("[CLOUD] Upload complete! Data is now persistent.")
+    except Exception as e:
+        print(f"[CLOUD ERROR] Failed to upload to S3: {e}")
 
 if __name__ == "__main__":
-    check_sites()
+    check_sites()      
